@@ -1,0 +1,7 @@
+{
+    "unityExe": "E:\\aov\\trunk\\UnityEngine\\WindowsEditor\\WindowsEditor\\x64\\Release\\Unity.exe",
+    "projectPath": "E:\\aov\\trunk\\Project",
+    "runMethod":"Assets.Scripts.UI.OLDSYS_CUIEventEnumCheker.CheckEventEnum",
+    "unityLog":"unity.log",
+    "quitOnComplete": true
+}
