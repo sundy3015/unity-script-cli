@@ -11,10 +11,7 @@ export async function runCli(configPath: string): Promise<number> {
   try {
     const config = await loadConfig(configPath);
     await validateUnityProject(config);
-
-    const unityLog = path.isAbsolute(config.unityLog)
-      ? config.unityLog
-      : path.resolve(path.dirname(configPath), config.unityLog);
+    const unityLog = path.isAbsolute(config.unityLog) ? config.unityLog : path.resolve(path.dirname(configPath), config.unityLog);
 
     const runner = new UnityCliRunner({ ...config, unityLog });
     const exitCode = await runner.run();
