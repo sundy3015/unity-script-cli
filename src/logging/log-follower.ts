@@ -1,8 +1,8 @@
 import { open } from "node:fs/promises";
 import type { Writable } from "node:stream";
 
-const DEFAULT_POLL_INTERVAL_MS = 100;
-const DEFAULT_CHUNK_SIZE = 64 * 1024;
+const DEFAULT_POLL_INTERVAL_MS = 100;   // 100 毫秒
+const DEFAULT_CHUNK_SIZE = 64 * 1024;   // 64 KB
 
 export interface LogFollowerOptions {
   output?: Writable;
@@ -46,6 +46,7 @@ export class LogFollower {
 
   start(): void {
     if (this.started || this.stopped) return;
+
     this.started = true;
     this.timer = setInterval(() => void this.poll(), this.pollIntervalMs);
   }

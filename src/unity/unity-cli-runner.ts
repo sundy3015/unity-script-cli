@@ -27,6 +27,7 @@ export class UnityCliRunner {
 
     await mkdir(path.dirname(path.resolve(this.options.unityLog)), { recursive: true });
     await writeFile(this.options.unityLog, "", "utf8");
+
     const logFollower = new LogFollower(this.options.unityLog);
     logFollower.start();
 
@@ -37,13 +38,19 @@ export class UnityCliRunner {
 
       let settled = false;
       child.once("error", (error) => {
+        console.error("[Unity CLI] Unity 启动失败:", error);
+
         if (settled) return;
+
         settled = true;
         void logFollower.stop().then(() => reject(error));
       });
 
       child.once("close", (code, signal) => {
+        console.log(`[Unity CLI] Unity 进程已退出，退出码: ${code}, 信号: ${signal}`);
+
         if (settled) return;
+
         settled = true;
         void logFollower.stop().then(() => {
           if (signal) reject(new Error(`Unity 被信号 ${signal} 终止`));
