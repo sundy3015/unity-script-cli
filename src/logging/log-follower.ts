@@ -26,10 +26,7 @@ export class LogFollower {
   private stopped = false;
   private warned = false;
 
-  constructor(
-    private readonly logPath: string,
-    options: LogFollowerOptions = {},
-  ) {
+  constructor(private readonly logPath: string, options: LogFollowerOptions = {}) {
     this.output = options.output ?? process.stdout;
     this.warningOutput = options.warningOutput ?? process.stderr;
     this.pollIntervalMs = options.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS;
