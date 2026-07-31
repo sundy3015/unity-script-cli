@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { loadConfig } from "../src/config.js";
+import { loadConfig } from "../src/config/config-loader.js";
 
 const validConfig = {
   unityExe: "C:\\Unity\\Unity.exe",

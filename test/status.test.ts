@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { formatCompletion, formatDuration } from "../src/runner.js";
+import { formatCompletion, formatDuration } from "../src/cli/status-formatter.js";
 
 test("formatDuration formats seconds with one decimal place", () => {
   assert.equal(formatDuration(12_345), "12.3 秒");

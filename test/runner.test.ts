@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildUnityArgs } from "../src/runner.js";
+import { UnityCliRunner } from "../src/unity/unity-cli-runner.js";
 
 const options = {
   unityExe: "Unity.exe",
@@ -10,14 +10,14 @@ const options = {
   quitOnComplete: true,
 };
 
-test("buildUnityArgs builds arguments from config", () => {
-  assert.deepEqual(buildUnityArgs(options), [
+test("UnityCliRunner.buildArgs builds arguments from config", () => {
+  assert.deepEqual(new UnityCliRunner(options).buildArgs(), [
     "-batchmode", "-projectPath", "E:\\game", "-executeMethod", "Tools.Verify.Run",
     "-logFile", "E:\\logs\\unity.log", "-quit",
   ]);
 });
 
-test("buildUnityArgs can keep Unity open", () => {
-  const args = buildUnityArgs({ ...options, quitOnComplete: false });
+test("UnityCliRunner.buildArgs can keep Unity open", () => {
+  const args = new UnityCliRunner({ ...options, quitOnComplete: false }).buildArgs();
   assert.equal(args.includes("-quit"), false);
 });
