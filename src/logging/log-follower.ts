@@ -83,12 +83,12 @@ export class LogFollower {
   }
 
   private async readNewContent(): Promise<void> {
-    const file = await open(this.logPath, "r");
+    const file = await open(this.logPath, "r");                                                 // 以只读模式打开日志文件
     try {
-      const stats = await file.stat();
-      const identity = `${stats.dev}:${stats.ino}:${stats.birthtimeMs}`;
+      const stats = await file.stat();                                                          // 获取文件状态信息
+      const identity = `${stats.dev}:${stats.ino}:${stats.birthtimeMs}`;                        // 生成文件唯一标识符
       const fileReplaced = this.fileIdentity !== undefined && this.fileIdentity !== identity;
-      if (fileReplaced || stats.size < this.offset) {
+      if (fileReplaced || stats.size < this.offset) {                                           // 文件被替换或截断，重置跟踪状态
         this.resetTracking();
       }
       this.fileIdentity = identity;
@@ -96,11 +96,11 @@ export class LogFollower {
       const targetOffset = stats.size;
       while (this.offset < targetOffset) {
         const bytesToRead = Math.min(this.buffer.length, targetOffset - this.offset);
-        const { bytesRead } = await file.read(this.buffer, 0, bytesToRead, this.offset);
+        const { bytesRead } = await file.read(this.buffer, 0, bytesToRead, this.offset);      // 从指定偏移量读取日志文件内容
         if (bytesRead === 0) break;
 
         this.offset += bytesRead;
-        const text = this.removeBom(this.decoder.write(this.buffer.subarray(0, bytesRead)));
+        const text = this.removeBom(this.decoder.write(this.buffer.subarray(0, bytesRead)));  // 将读取的字节转换为字符串，并移除 BOM
         if (text) await this.writeOutput(text);
       }
     } finally {
@@ -108,23 +108,27 @@ export class LogFollower {
     }
   }
 
+  // 重置跟踪状态，包括偏移量、解码器和文件起始标记
   private resetTracking(): void {
     this.offset = 0;
     this.decoder = new StringDecoder("utf8");
     this.atFileStart = true;
   }
 
+  // 移除 UTF-8 BOM（字节顺序标记）以确保输出的文本不包含 BOM
   private removeBom(text: string): string {
     if (!this.atFileStart || text.length === 0) return text;
     this.atFileStart = false;
     return text.startsWith("\uFEFF") ? text.slice(1) : text;
   }
 
+  // 将日志内容写入输出流，如果输出流的缓冲区已满，则等待 "drain" 事件
   private async writeOutput(text: string): Promise<void> {
-    if (this.output.write(text)) return;
-    await once(this.output, "drain");
+    if (this.output.write(text)) return;                    // 如果写入成功，直接返回
+    await once(this.output, "drain");                       // 等待输出流的 "drain" 事件，确保缓冲区已清空
   }
 
+  // 记录警告信息，确保只记录一次警告
   private warn(error: unknown): void {
     if (this.warned) return;
     this.warned = true;
