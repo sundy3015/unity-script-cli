@@ -41,6 +41,7 @@ npm install
 | `runMethod` | `string` | 传给 Unity `-executeMethod` 的静态方法全名。 |
 | `unityLog` | `string` | Unity 日志文件路径；相对路径以配置文件目录为基准。 |
 | `quitOnComplete` | `boolean` | 方法执行完成后是否通过 `-quit` 关闭 Unity。 |
+| `timeoutSeconds` | `number` | 可选；Unity 最大运行秒数，范围为 `(0, 86400]`。未配置时不限制运行时间。 |
 
 `unity-cli.config.json` 已加入 `.gitignore`，本机路径不会被提交。
 
@@ -89,6 +90,8 @@ Unity 直接将日志写入 `unityLog`，CLI 实时跟踪该文件并显示新�
 
 非零 Unity 退出码会作为 CLI 的退出码。当 `quitOnComplete` 为 `false` 时，需要关闭 Unity 进程后才会显示最终状态。
 
+仅调用 `Debug.LogError` 不保证 Unity 返回非零退出码。自动化方法失败时应抛出未处理异常，或显式调用 `UnityEditor.EditorApplication.Exit(1)`。
+
 ## 项目结构
 
 ```text
@@ -122,3 +125,4 @@ npm test
 - **Unity 工程校验失败**：确认 `projectPath` 下包含 `Assets` 和 `ProjectSettings`。
 - **方法无法执行**：确认脚本位于 Editor 程序集、方法为静态方法，并使用完整的命名空间、类名和方法名。
 - **任务一直未结束**：当 `quitOnComplete` 为 `false` 时，CLI 会持续等待 Unity 进程关闭。
+- **日志报错但任务显示成功**：确保失败路径抛出异常或调用 `EditorApplication.Exit(1)`。

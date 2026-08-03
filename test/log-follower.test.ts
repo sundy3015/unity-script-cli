@@ -56,6 +56,49 @@ test("LogFollower decodes UTF-8 characters split across reads", async () => {
   });
 });
 
+test("LogFollower flushes an incomplete UTF-8 character when stopping", async () => {
+  await withLogFile(async (logPath) => {
+    const output = captureOutput();
+    const follower = new LogFollower(logPath, { output: output.stream });
+
+    await writeFile(logPath, Buffer.from([0xe4, 0xb8]));
+    await follower.poll();
+    assert.equal(output.read(), "");
+    await follower.stop();
+
+    assert.equal(output.read(), "�");
+  });
+});
+
+test("LogFollower removes a UTF-8 BOM split across chunks", async () => {
+  await withLogFile(async (logPath) => {
+    const output = captureOutput();
+    const follower = new LogFollower(logPath, { output: output.stream, chunkSize: 1 });
+    const content = Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from("日志")]);
+
+    await writeFile(logPath, content);
+    await follower.poll();
+    await follower.stop();
+
+    assert.equal(output.read(), "日志");
+  });
+});
+
+test("LogFollower resets pending decoder bytes after truncation", async () => {
+  await withLogFile(async (logPath) => {
+    const output = captureOutput();
+    const follower = new LogFollower(logPath, { output: output.stream });
+
+    await writeFile(logPath, Buffer.from([0xe4, 0xb8]));
+    await follower.poll();
+    await writeFile(logPath, "x");
+    await follower.poll();
+    await follower.stop();
+
+    assert.equal(output.read(), "x");
+  });
+});
+
 test("LogFollower reads remaining content before stopping", async () => {
   await withLogFile(async (logPath) => {
     const output = captureOutput();

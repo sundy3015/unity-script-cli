@@ -1,5 +1,7 @@
+import { once } from "node:events";
 import { open } from "node:fs/promises";
 import type { Writable } from "node:stream";
+import { StringDecoder } from "node:string_decoder";
 
 const DEFAULT_POLL_INTERVAL_MS = 100;   // 100 毫秒
 const DEFAULT_CHUNK_SIZE = 64 * 1024;   // 64 KB
@@ -12,7 +14,8 @@ export interface LogFollowerOptions {
 }
 
 export class LogFollower {
-  private decoder = new TextDecoder("utf-8");
+  private decoder = new StringDecoder("utf8");
+  private atFileStart = true;
   private readonly output: Writable;
   private readonly warningOutput: Writable;
   private readonly pollIntervalMs: number;
@@ -22,8 +25,6 @@ export class LogFollower {
   private timer?: NodeJS.Timeout;
   private pending: Promise<void> = Promise.resolve();
   private stopPromise?: Promise<void>;
-  private started = false;
-  private stopped = false;
   private warned = false;
 
   constructor(private readonly logPath: string, options: LogFollowerOptions = {}) {
@@ -42,14 +43,13 @@ export class LogFollower {
   }
 
   start(): void {
-    if (this.started || this.stopped) return;
+    if (this.timer || this.stopPromise) return;
 
-    this.started = true;
     this.timer = setInterval(() => void this.poll(), this.pollIntervalMs);
   }
 
   poll(): Promise<void> {
-    if (this.stopped || this.stopPromise) return this.pending;
+    if (this.stopPromise) return this.pending;
     return this.enqueueRead(false);
   }
 
@@ -60,12 +60,10 @@ export class LogFollower {
     this.stopPromise = (async () => {
       await this.enqueueRead(true);
       try {
-        const remainingText = this.decoder.decode();
+        const remainingText = this.removeBom(this.decoder.end());
         if (remainingText) await this.writeOutput(remainingText);
       } catch (error) {
         this.warn(error);
-      } finally {
-        this.stopped = true;
       }
     })();
     return this.stopPromise;
@@ -89,9 +87,8 @@ export class LogFollower {
     try {
       const stats = await file.stat();
       const identity = `${stats.dev}:${stats.ino}:${stats.birthtimeMs}`;
-      if (this.fileIdentity !== undefined && this.fileIdentity !== identity) {
-        this.resetTracking();
-      } else if (stats.size < this.offset) {
+      const fileReplaced = this.fileIdentity !== undefined && this.fileIdentity !== identity;
+      if (fileReplaced || stats.size < this.offset) {
         this.resetTracking();
       }
       this.fileIdentity = identity;
@@ -103,7 +100,7 @@ export class LogFollower {
         if (bytesRead === 0) break;
 
         this.offset += bytesRead;
-        const text = this.decoder.decode(this.buffer.subarray(0, bytesRead), { stream: true });
+        const text = this.removeBom(this.decoder.write(this.buffer.subarray(0, bytesRead)));
         if (text) await this.writeOutput(text);
       }
     } finally {
@@ -113,27 +110,19 @@ export class LogFollower {
 
   private resetTracking(): void {
     this.offset = 0;
-    this.decoder = new TextDecoder("utf-8");
+    this.decoder = new StringDecoder("utf8");
+    this.atFileStart = true;
+  }
+
+  private removeBom(text: string): string {
+    if (!this.atFileStart || text.length === 0) return text;
+    this.atFileStart = false;
+    return text.startsWith("\uFEFF") ? text.slice(1) : text;
   }
 
   private async writeOutput(text: string): Promise<void> {
     if (this.output.write(text)) return;
-    await new Promise<void>((resolve, reject) => {
-      const onDrain = (): void => {
-        cleanup();
-        resolve();
-      };
-      const onError = (error: Error): void => {
-        cleanup();
-        reject(error);
-      };
-      const cleanup = (): void => {
-        this.output.off("drain", onDrain);
-        this.output.off("error", onError);
-      };
-      this.output.once("drain", onDrain);
-      this.output.once("error", onError);
-    });
+    await once(this.output, "drain");
   }
 
   private warn(error: unknown): void {

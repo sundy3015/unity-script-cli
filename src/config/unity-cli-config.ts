@@ -4,4 +4,5 @@ export interface UnityCliConfig {
   runMethod: string;
   unityLog: string;
   quitOnComplete: boolean;
+  timeoutSeconds?: number;
 }

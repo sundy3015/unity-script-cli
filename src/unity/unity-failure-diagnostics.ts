@@ -58,7 +58,7 @@ function inspectLine(state: DiagnosticState, line: string): void {
   }
 
   const projectMatch = line.match(/^\s*Project:\s*(.+?)\s*$/i);
-  if (state.projectAlreadyOpen && projectMatch) state.projectPath = projectMatch[1];
+  if (projectMatch) state.projectPath = projectMatch[1];
 
   if (/Scripts have compiler errors|Compilation failed|Compiler errors? detected/i.test(line)) {
     state.compilationFailed = true;

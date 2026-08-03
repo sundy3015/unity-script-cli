@@ -48,3 +48,27 @@ test("loadConfig rejects invalid JSON", async () => {
     await assert.rejects(loadConfig(configPath), /无法读取配置文件/);
   });
 });
+
+test("loadConfig allows timeoutSeconds to be omitted", async () => {
+  await withConfig(JSON.stringify(validConfig), async (configPath) => {
+    assert.equal((await loadConfig(configPath)).timeoutSeconds, undefined);
+  });
+});
+
+test("loadConfig accepts a positive timeoutSeconds", async () => {
+  await withConfig(JSON.stringify({ ...validConfig, timeoutSeconds: 30 }), async (configPath) => {
+    assert.equal((await loadConfig(configPath)).timeoutSeconds, 30);
+  });
+});
+
+test("loadConfig rejects an invalid timeoutSeconds", async () => {
+  await withConfig(JSON.stringify({ ...validConfig, timeoutSeconds: 0 }), async (configPath) => {
+    await assert.rejects(loadConfig(configPath), /timeoutSeconds/);
+  });
+});
+
+test("loadConfig rejects timeoutSeconds over 24 hours", async () => {
+  await withConfig(JSON.stringify({ ...validConfig, timeoutSeconds: 86_401 }), async (configPath) => {
+    await assert.rejects(loadConfig(configPath), /timeoutSeconds/);
+  });
+});

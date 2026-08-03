@@ -13,6 +13,14 @@ test("project already open takes priority over fatal exit", () => {
   assert.equal(analyzeUnityLog(log), "Unity 项目已被另一个实例打开: E:/aov/trunk/Project");
 });
 
+test("captures the project path before the project-open error", () => {
+  const log = [
+    "Project: E:/aov/trunk/Project",
+    "Multiple Unity instances cannot open the same project.",
+  ].join("\n");
+  assert.equal(analyzeUnityLog(log), "Unity 项目已被另一个实例打开: E:/aov/trunk/Project");
+});
+
 test("recognizes compilation failure", () => {
   assert.equal(analyzeUnityLog("Aborting batchmode due to failure:\nScripts have compiler errors."), "Unity 项目脚本编译失败");
 });

@@ -20,7 +20,7 @@ export async function runCli(configPath: string): Promise<number> {
       console.log(formatCompletion(exitCode, Date.now() - startTime));
     } else {
       const diagnosis = await diagnoseUnityFailure(unityLog);
-      console.log(formatFailureCompletion(
+      console.error(formatFailureCompletion(
         exitCode,
         Date.now() - startTime,
         diagnosis.reason,
