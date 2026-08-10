@@ -11,11 +11,12 @@ const options = {
   runMethod: "Tools.Verify.Run",
   unityLog: "E:\\logs\\unity.log",
   quitOnComplete: true,
+  noGraphics: true,
 };
 
 test("UnityCliRunner.buildArgs builds arguments from config", () => {
   assert.deepEqual(new UnityCliRunner(options).buildArgs(), [
-    "-batchmode", "-projectPath", "E:\\game", "-executeMethod", "Tools.Verify.Run",
+    "-batchmode", "-nographics", "-projectPath", "E:\\game", "-executeMethod", "Tools.Verify.Run",
     "-logFile", "E:\\logs\\unity.log", "-quit",
   ]);
 });
@@ -50,4 +51,15 @@ test("UnityCliRunner does not print close status after a spawn error", async () 
     console.error = originalError;
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+test("UnityCliRunner.buildArgs can enable graphics", () => {
+  const args = new UnityCliRunner({ ...options, noGraphics: false }).buildArgs();
+  assert.equal(args.includes("-nographics"), false);
+});
+
+test("UnityCliRunner.buildArgs enables noGraphics by default", () => {
+  const { noGraphics: _noGraphics, ...optionsWithoutNoGraphics } = options;
+  const args = new UnityCliRunner(optionsWithoutNoGraphics).buildArgs();
+  assert.equal(args.includes("-nographics"), true);
 });

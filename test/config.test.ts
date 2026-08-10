@@ -11,6 +11,7 @@ const validConfig = {
   runMethod: "Tools.Verify.Run",
   unityLog: "logs\\unity.log",
   quitOnComplete: true,
+  noGraphics: false,
 };
 
 async function withConfig(content: string, action: (configPath: string) => Promise<void>): Promise<void> {
@@ -30,6 +31,13 @@ test("loadConfig loads a complete config", async () => {
   });
 });
 
+test("loadConfig enables noGraphics by default", async () => {
+  const { noGraphics: _noGraphics, ...configWithoutNoGraphics } = validConfig;
+  await withConfig(JSON.stringify(configWithoutNoGraphics), async (configPath) => {
+    assert.deepEqual(await loadConfig(configPath), { ...configWithoutNoGraphics, noGraphics: true });
+  });
+});
+
 test("loadConfig rejects a missing field", async () => {
   const { runMethod: _runMethod, ...incompleteConfig } = validConfig;
   await withConfig(JSON.stringify(incompleteConfig), async (configPath) => {
@@ -40,6 +48,12 @@ test("loadConfig rejects a missing field", async () => {
 test("loadConfig rejects a field with the wrong type", async () => {
   await withConfig(JSON.stringify({ ...validConfig, quitOnComplete: "true" }), async (configPath) => {
     await assert.rejects(loadConfig(configPath), /quitOnComplete.*布尔值/);
+  });
+});
+
+test("loadConfig rejects noGraphics with the wrong type", async () => {
+  await withConfig(JSON.stringify({ ...validConfig, noGraphics: "true" }), async (configPath) => {
+    await assert.rejects(loadConfig(configPath), /noGraphics.*布尔值/);
   });
 });
 

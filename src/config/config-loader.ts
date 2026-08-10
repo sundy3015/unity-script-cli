@@ -29,6 +29,11 @@ export async function loadConfig(configPath: string): Promise<UnityCliConfig> {
        config.timeoutSeconds <= 0 || config.timeoutSeconds > 86_400)) {
     throw new Error("配置项 timeoutSeconds 必须是大于 0 且不超过 86400 的有限数字");
   }
+  if (config.noGraphics === undefined) {
+    config.noGraphics = true;
+  } else if (typeof config.noGraphics !== "boolean") {
+    throw new Error("配置项 noGraphics 必须是布尔值");
+  }
 
   return config as unknown as UnityCliConfig;
 }

@@ -30,7 +30,8 @@ npm install
   "projectPath": "E:\\path\\to\\unity-project",
   "runMethod": "Tools.Verify.Run",
   "unityLog": "logs\\unity.log",
-  "quitOnComplete": true
+  "quitOnComplete": true,
+  "noGraphics": true
 }
 ```
 
@@ -41,6 +42,7 @@ npm install
 | `runMethod` | `string` | 传给 Unity `-executeMethod` 的静态方法全名。 |
 | `unityLog` | `string` | Unity 日志文件路径；相对路径以配置文件目录为基准。 |
 | `quitOnComplete` | `boolean` | 方法执行完成后是否通过 `-quit` 关闭 Unity。 |
+| `noGraphics` | `boolean` | 是否通过 `-nographics` 禁用图形设备，默认为 `true`；依赖 GPU 或渲染的任务应设为 `false`。 |
 | `timeoutSeconds` | `number` | 可选；Unity 最大运行秒数，范围为 `(0, 86400]`。未配置时不限制运行时间。 |
 
 `unity-cli.config.json` 已加入 `.gitignore`，本机路径不会被提交。
@@ -77,7 +79,7 @@ npm run unity
 实际启动参数类似：
 
 ```text
-Unity.exe -batchmode -projectPath <projectPath> -executeMethod <runMethod> -logFile <unityLog> -quit
+Unity.exe -batchmode -nographics -projectPath <projectPath> -executeMethod <runMethod> -logFile <unityLog> -quit
 ```
 
 Unity 直接将日志写入 `unityLog`，CLI 实时跟踪该文件并显示新增内容。每次运行会覆盖原日志文件。

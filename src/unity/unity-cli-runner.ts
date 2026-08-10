@@ -10,10 +10,14 @@ export class UnityCliRunner {
   buildArgs(): string[] {
     const args = [
       "-batchmode",
+    ];
+
+    if (this.options.noGraphics !== false) args.push("-nographics");
+    args.push(
       "-projectPath", this.options.projectPath,
       "-executeMethod", this.options.runMethod,
       "-logFile", this.options.unityLog,
-    ];
+    );
 
     if (this.options.quitOnComplete) args.push("-quit");
     return args;
