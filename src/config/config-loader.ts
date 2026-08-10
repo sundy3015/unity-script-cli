@@ -21,8 +21,8 @@ export async function loadConfig(configPath: string): Promise<UnityCliConfig> {
   assertNonEmptyString(config, "projectPath");
   assertNonEmptyString(config, "runMethod");
   assertNonEmptyString(config, "unityLog");
-  if (typeof config.quitOnComplete !== "boolean") {
-    throw new Error("配置项 quitOnComplete 必须是布尔值");
+  if (typeof config.quit !== "boolean") {
+    throw new Error("配置项 quit 必须是布尔值");
   }
   if (config.timeoutSeconds !== undefined &&
       (typeof config.timeoutSeconds !== "number" || !Number.isFinite(config.timeoutSeconds) ||

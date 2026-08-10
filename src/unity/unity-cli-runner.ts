@@ -20,7 +20,6 @@ export class UnityCliRunner {
     );
 
     if (this.options.quit) args.push("-quit");
-    if (this.options.noGraphics) args.push("-nographics");
     return args;
   }
 

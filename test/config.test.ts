@@ -10,7 +10,7 @@ const validConfig = {
   projectPath: "E:\\game",
   runMethod: "Tools.Verify.Run",
   unityLog: "logs\\unity.log",
-  quitOnComplete: true,
+  quit: true,
   noGraphics: false,
 };
 
@@ -46,8 +46,8 @@ test("loadConfig rejects a missing field", async () => {
 });
 
 test("loadConfig rejects a field with the wrong type", async () => {
-  await withConfig(JSON.stringify({ ...validConfig, quitOnComplete: "true" }), async (configPath) => {
-    await assert.rejects(loadConfig(configPath), /quitOnComplete.*布尔值/);
+  await withConfig(JSON.stringify({ ...validConfig, quit: "true" }), async (configPath) => {
+    await assert.rejects(loadConfig(configPath), /quit.*布尔值/);
   });
 });
 

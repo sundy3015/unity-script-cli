@@ -24,7 +24,8 @@ function createConfig(projectPath: string, unityExe: string) {
     projectPath,
     runMethod: "Tools.Verify.Run",
     unityLog: "unity.log",
-    quitOnComplete: true,
+    quit: true,
+    noGraphics: true,
   };
 }
 

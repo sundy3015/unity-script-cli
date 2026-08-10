@@ -17,7 +17,7 @@ const options = {
 test("UnityCliRunner.buildArgs builds arguments from config", () => {
   assert.deepEqual(new UnityCliRunner(options).buildArgs(), [
     "-batchmode", "-nographics", "-projectPath", "E:\\game", "-executeMethod", "Tools.Verify.Run",
-    "-logFile", "E:\\logs\\unity.log", "-quit", "-nographics"
+    "-logFile", "E:\\logs\\unity.log", "-quit",
   ]);
 });
 

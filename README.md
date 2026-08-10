@@ -114,8 +114,15 @@ src/
 
 ## 开发检查
 
+运行 TypeScript 类型检查：
+
 ```powershell
 npm run check
+```
+
+运行测试：
+
+```powershell
 npm test
 ```
 
