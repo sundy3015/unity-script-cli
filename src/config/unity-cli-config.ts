@@ -14,7 +14,7 @@ export interface UnityCliConfig {
   projectPath: string;
   runMethod: string;
   unityLog: string;
-  quit: boolean;
   noGraphics: boolean;
+  quit: boolean;
   timeoutSeconds?: number;
 }

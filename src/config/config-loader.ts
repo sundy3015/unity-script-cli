@@ -24,6 +24,9 @@ export async function loadConfig(configPath: string): Promise<UnityCliConfig> {
   if (typeof config.quit !== "boolean") {
     throw new Error("配置项 quit 必须是布尔值");
   }
+  if(typeof config.noGraphics !== "boolean") {
+    throw new Error("配置项 noGraphics 必须是布尔值");
+  }
   if (config.timeoutSeconds !== undefined &&
       (typeof config.timeoutSeconds !== "number" || !Number.isFinite(config.timeoutSeconds) ||
        config.timeoutSeconds <= 0 || config.timeoutSeconds > 86_400)) {
