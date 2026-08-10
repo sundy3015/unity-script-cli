@@ -1,44 +1,28 @@
 # Unity Script CLI
 
-一个使用 Node.js + TypeScript 编写的轻量级 Unity 命令行启动器。它会以批处理模式启动 Unity Editor，并通过 `-executeMethod` 调用 Unity 项目中的 C# 静态方法。
+使用 Node.js + TypeScript 从命令行启动 Unity Editor，并执行 Unity 工程中的静态方法。适合自动化验证、资源检查、批量处理和 CI 任务。
 
-适用于以下场景：
+## 功能
 
-- 在 CI/CD 中执行 Unity 构建或检查
-- 批量处理和验证项目资源
-- 自动检查 Scene、Prefab 或配置
-- 从外部脚本调用 Unity Editor 工具
-- 快速验证无需手动操作编辑器的自动化任务
-
-## 工作方式
-
-工具会依次完成以下操作：
-
-1. 读取 `unity-cli.config.json`。
-2. 检查 Unity 可执行文件及 Unity 项目目录是否存在。
-3. 清空本次运行使用的日志文件。
-4. 使用 `-batchmode` 启动 Unity，并执行配置的静态方法。
-5. 实时将 Unity 日志同步到当前终端。
-6. Unity 退出后输出运行结果、退出码和总耗时。
-
-Unity 进程的退出码也会作为 CLI 的退出码，便于在自动化脚本或 CI 中判断任务是否成功。
-
-## 环境要求
-
-- Node.js 18 或更高版本
-- npm
-- 已安装的 Unity Editor
-- 一个包含 `Assets` 和 `ProjectSettings` 目录的 Unity 项目
+- 从固定配置文件读取 Unity、工程、执行方法和日志路径。
+- 启动前校验 Unity 程序及 Unity 工程目录。
+- 使用 Unity `-batchmode` 和 `-executeMethod` 执行静态方法。
+- Unity 直接写入日志文件，CLI 将新增日志实时同步到终端。
+- 任务结束后显示成功或失败、退出码和总耗时。
 
 ## 安装
 
+克隆工程并安装依赖：
+
 ```powershell
+git clone https://github.com/sundy3015/unity-script-cli.git
+Set-Location unity-script-cli
 npm install
 ```
 
 ## 配置
 
-在本仓库根目录创建 `unity-cli.config.json`：
+在项目根目录创建 `unity-cli.config.json`：
 
 ```json
 {
@@ -46,41 +30,35 @@ npm install
   "projectPath": "E:\\path\\to\\unity-project",
   "runMethod": "Tools.Verify.Run",
   "unityLog": "logs\\unity.log",
-  "quitOnComplete": true
+  "quit": true,
+  "noGraphics": true
 }
 ```
 
-配置项说明：
-
 | 配置项 | 类型 | 说明 |
 | --- | --- | --- |
-| `unityExe` | `string` | Unity Editor 可执行文件的路径。 |
-| `projectPath` | `string` | Unity 项目路径，必须包含 `Assets` 和 `ProjectSettings`。 |
+| `unityExe` | `string` | Unity 可执行文件的路径。 |
+| `projectPath` | `string` | 包含 `Assets` 和 `ProjectSettings` 的 Unity 工程路径。 |
 | `runMethod` | `string` | 传给 Unity `-executeMethod` 的静态方法全名。 |
-| `unityLog` | `string` | Unity 日志文件路径；相对路径以仓库根目录为基准。 |
-| `quitOnComplete` | `boolean` | 是否添加 `-quit`，让 Unity 在方法执行后退出。 |
+| `unityLog` | `string` | Unity 日志文件路径；相对路径以配置文件目录为基准。 |
+| `quit` | `boolean` | 方法执行完成后是否通过 `-quit` 关闭 Unity。 |
+| `noGraphics` | `boolean` | 是否通过 `-nographics` 禁用图形设备，默认为 `true`；依赖 GPU 或渲染的任务应设为 `false`。 |
+| `timeoutSeconds` | `number` | 可选；Unity 最大运行秒数，范围为 `(0, 86400]`。未配置时不限制运行时间。 |
 
-`unity-cli.config.json` 已加入 `.gitignore`，其中的本机路径不会被提交。
+`unity-cli.config.json` 已加入 `.gitignore`，本机路径不会被提交。
 
-## Unity 方法示例
+## Unity 方法
 
-`runMethod` 指向的方法需要是可由 Unity `-executeMethod` 调用的静态方法。Editor 工具建议放在 Unity 项目的 `Editor` 目录中：
+执行方法需要位于 Unity Editor 程序集中，并且必须是可访问的静态方法。例如在 Unity 工程的 `Assets/Editor/Tools/Verify.cs` 中添加：
 
 ```csharp
-using UnityEditor;
-using UnityEngine;
-
 namespace Tools
 {
     public static class Verify
     {
         public static void Run()
         {
-            Debug.Log("开始执行项目检查");
-
-            // 在这里执行资源检查、构建或其他自动化任务。
-
-            Debug.Log("项目检查完成");
+            UnityEngine.Debug.Log("验证完成");
         }
     }
 }
@@ -89,12 +67,8 @@ namespace Tools
 对应配置为：
 
 ```json
-{
-  "runMethod": "Tools.Verify.Run"
-}
+"runMethod": "Tools.Verify.Run"
 ```
-
-实际配置文件仍需包含其他必填配置项。
 
 ## 运行
 
@@ -102,30 +76,41 @@ namespace Tools
 npm run unity
 ```
 
-工具实际启动 Unity 时使用的参数大致如下：
+实际启动参数类似：
 
 ```text
-Unity.exe -batchmode \
-  -projectPath E:\path\to\unity-project \
-  -executeMethod Tools.Verify.Run \
-  -logFile logs\unity.log \
-  -quit
+Unity.exe -batchmode -nographics -projectPath <projectPath> -executeMethod <runMethod> -logFile <unityLog> -quit
 ```
 
-运行期间，Unity 会将完整日志写入 `unityLog` 指定的文件，CLI 会轮询该文件并把新增内容实时显示在终端。每次运行都会覆盖原日志文件。
+Unity 直接将日志写入 `unityLog`，CLI 实时跟踪该文件并显示新增内容。每次运行会覆盖原日志文件。
 
-任务结束后会显示类似以下结果：
+任务结束后会输出状态：
 
 ```text
 [Unity CLI] 任务成功，退出码: 0，耗时: 12.4 秒
 ```
 
-如果 Unity 返回非零退出码，CLI 也会以相同的非零退出码结束。
+非零 Unity 退出码会作为 CLI 的退出码。当 `quit` 为 `false` 时，需要关闭 Unity 进程后才会显示最终状态。
 
-## `quitOnComplete` 的行为
+仅调用 `Debug.LogError` 不保证 Unity 返回非零退出码。自动化方法失败时应抛出未处理异常，或显式调用 `UnityEditor.EditorApplication.Exit(1)`。
 
-- 设置为 `true` 时，启动参数中会包含 `-quit`，适合一次性自动化任务和 CI。
-- 设置为 `false` 时，Unity 不会因该参数自动退出；CLI 会持续等待 Unity 进程关闭，之后才输出最终结果。
+## 项目结构
+
+```text
+src/
+├── index.ts                         # CLI 入口
+├── cli/
+│   ├── cli-application.ts           # 运行流程编排
+│   └── status-formatter.ts          # 状态和耗时格式化
+├── config/
+│   ├── config-loader.ts             # 配置读取与字段校验
+│   └── unity-cli-config.ts          # 配置类型
+├── logging/
+│   └── log-follower.ts              # 日志文件实时跟踪
+└── unity/
+    ├── unity-cli-runner.ts          # Unity 参数和进程执行
+    └── unity-project-validator.ts   # Unity 工程路径校验
+```
 
 ## 开发检查
 
@@ -141,11 +126,12 @@ npm run check
 npm test
 ```
 
-测试覆盖配置解析、Unity 启动参数、日志跟踪以及结果格式化。
+测试不会实际启动 Unity。
 
-## 注意事项
+## 常见问题
 
-- 同一个 Unity 项目通常不能同时被多个 Unity Editor 进程打开。
-- `runMethod` 不存在、脚本编译失败或项目资源导入失败时，请查看配置的 Unity 日志文件。
-- 日志文件所在目录会自动创建，但已有日志内容会在启动前清空。
-- 如果自动化方法需要明确表示失败，应让 Unity 以非零状态退出，例如调用 `EditorApplication.Exit(code)`。
+- **找不到配置文件**：确认项目根目录存在 `unity-cli.config.json`。
+- **Unity 工程校验失败**：确认 `projectPath` 下包含 `Assets` 和 `ProjectSettings`。
+- **方法无法执行**：确认脚本位于 Editor 程序集、方法为静态方法，并使用完整的命名空间、类名和方法名。
+- **任务一直未结束**：当 `quit` 为 `false` 时，CLI 会持续等待 Unity 进程关闭。
+- **日志报错但任务显示成功**：确保失败路径抛出异常或调用 `EditorApplication.Exit(1)`。
