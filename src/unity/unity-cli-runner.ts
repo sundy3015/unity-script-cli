@@ -18,8 +18,8 @@ export class UnityCliRunner {
       "-logFile", this.options.unityLog,
     );
 
-    if (this.options.quit === true) args.push("-quit");
     if (this.options.noGraphics === true) args.push("-nographics");
+    if (this.options.quit === true) args.push("-quit");
 
     return args;
   }
