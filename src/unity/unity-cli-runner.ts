@@ -12,14 +12,15 @@ export class UnityCliRunner {
       "-batchmode",
     ];
 
-    if (this.options.noGraphics !== false) args.push("-nographics");
     args.push(
       "-projectPath", this.options.projectPath,
       "-executeMethod", this.options.runMethod,
       "-logFile", this.options.unityLog,
     );
 
-    if (this.options.quit) args.push("-quit");
+    if (this.options.quit === true) args.push("-quit");
+    if (this.options.noGraphics === true) args.push("-nographics");
+
     return args;
   }
 
