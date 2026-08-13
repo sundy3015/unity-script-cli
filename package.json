@@ -4,6 +4,7 @@
   "scripts": {
     "unity": "tsx src/index.ts",
     "check": "tsc --noEmit",
+    "test:ts": "cls && tsx watch ./src/index.ts",
     "test": "node --test --import tsx test/*.test.ts"
   },
 
